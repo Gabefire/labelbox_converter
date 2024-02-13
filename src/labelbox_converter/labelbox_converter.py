@@ -2,8 +2,8 @@ import labelbox as lb
 import labelbox.types as lb_types
 from uuid import uuid4
 
-class lb_converter:
-    def __init__(self, project_id, client, ontology_mapping) -> None:
+class _lb_converter:
+    def __init__(self, project_id: str, client: lb.Client, ontology_mapping: dict[str: str]) -> None:
         self.client: lb.Client = client
         self.project: str = project_id
         self.ontology_mapping: dict[str:str] = ontology_mapping
@@ -22,11 +22,6 @@ class lb_converter:
         "label_details": True,
         "performance_details": False,
         "interpolated_frames": True
-        }
-
-        filters= {
-        # "data_row_ids": ["", ""],
-        # "batch_ids": ["", ""],
         }
 
         export_task = project.export(params=export_params)
@@ -87,7 +82,7 @@ class lb_converter:
                                                            answer: <model_answer_name>, 
                                                            points: {start_x, start_y, end_x, end_y}
                                                          }]
-                                           }]
+                                            }]
         """
         for result in results:
             annotations = []
@@ -115,7 +110,6 @@ class lb_converter:
                                                            mask: <byte_array>,
                                                            color(optional): <rgb tuple> 
                                                          }]
-                                            
                                            }]
         """
         for result in results:
@@ -134,6 +128,32 @@ class lb_converter:
                             color=color
                         ))
                     annotations.append(mask_annotation)
+                self.labels.append(
+                    lb_types.Label(data=lb_types.ImageData(global_key=result["global_key"]), annotations=annotations)
+                    )
+    def create_polygon_labels(self, results: list[dict[str:str]] ):
+        """Creates polygon labels that can then be imported
+
+        Args:
+            results (list[dict[str:str]]): [{
+                                            global_key: <Global_Key>, 
+                                            predictions: [{
+                                                           answer: <model_answer_name>, 
+                                                           points: [(<x_coordinate>, <y_coordinate>)]
+                                                         }]
+                                           }]
+        """
+        for result in results:
+            annotations = []
+            if "predictions" in result:
+                for prediction in result["predictions"]:
+                    lb_name = self.ontology_mapping[prediction["answer"]]
+                    polygon_annotation = lb_types.ObjectAnnotation(
+                        name=lb_name,
+                        value=lb_types.Polygon(
+                            points=[lb_types.Point(x=coordinates[0], y=coordinates[1]) for coordinates in prediction["points"]]
+                        ))
+                    annotations.append(polygon_annotation)
                 self.labels.append(
                     lb_types.Label(data=lb_types.ImageData(global_key=result["global_key"]), annotations=annotations)
                     )
