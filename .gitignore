@@ -2,3 +2,6 @@
 test.ipynb
 .env
 .venv
+build
+*.egg-info
+dist
