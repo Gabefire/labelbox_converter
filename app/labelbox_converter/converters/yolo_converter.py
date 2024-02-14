@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 import io
 
-class yolo_converter(_lb_converter):
+class Yolo_Converter(_lb_converter):
     def __init__(self, project_id: str, client: lb.Client, ontology_mapping: dict[str:str]) -> None:
         """Class to integrate YoloV8 annotations with labelbox
 
